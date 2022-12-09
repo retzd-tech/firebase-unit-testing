@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  function isAdminHasPermission(privelege, database) {
+    return request.auth.uid in get(/databases/$(database)/documents/admins/has_permission).data[privelege]
+  }
+
+  function hasKey(field) {
+    return request.resource.data.keys().hasAll(field)
+  }
+
+  match /databases/{database}/documents {
+    match /members/{memberId} {
+      allow read: if request.auth.uid == memberId
+      allow write: if isAdminHasPermission("write", database) && hasKey(["email"])
+    }
+  }
+}
